@@ -16,6 +16,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import LiveCountdown from './LiveCountdown';
+import CoverHoloShimmer from './CoverHoloShimmer';
 import { getGoogleCalendarUrl } from '../utils/calendar';
 import { fireWeddingConfetti, fireHearts } from '../utils/confetti';
 import { soundManager } from '../utils/audio';
@@ -139,13 +140,10 @@ export default function TurnCardBook({
   const renderSheet = (sheetPage) => (
     <>
       {sheetPage === 0 && (
-        <div className="relative w-full h-full bg-white flex items-center justify-center overflow-hidden">
-          <img
-            src="/card-cover.jpg"
-            alt="Cheri Cheri Lady - Akanksha"
-            className="w-full h-full object-contain object-center select-none"
-          />
-        </div>
+        <CoverHoloShimmer
+          src="/card-cover.jpg"
+          alt="Cheri Cheri Lady - Akanksha"
+        />
       )}
 
       {sheetPage === 1 && (

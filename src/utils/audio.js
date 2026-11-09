@@ -134,6 +134,38 @@ class SoundEffects {
     } catch {}
   }
 
+  // Crisp wax seal crack & paper slide whoosh
+  playUnsealSound() {
+    try {
+      this.initAudioContext();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+
+      // 1. Wax "crack / pop"
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(360, now);
+      osc.frequency.exponentialRampToValueAtTime(80, now + 0.12);
+      gain.gain.setValueAtTime(0.28, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.14);
+
+      // 2. Paper slide rustle
+      setTimeout(() => {
+        this.playPageTurn();
+      }, 70);
+
+      // 3. Celebratory chime
+      setTimeout(() => {
+        this.playChime();
+      }, 240);
+    } catch {}
+  }
+
   // Play background music track (respects userMuted unless force = true)
   startBGM(force = false) {
     if (this.userMuted && !force) {

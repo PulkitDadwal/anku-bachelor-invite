@@ -3,18 +3,19 @@ import TurnCardBook from './components/TurnCardBook';
 import RSVPModal from './components/RSVPModal';
 import QRModal from './components/QRModal';
 import ContactModal from './components/ContactModal';
-import { Heart, PhoneCall } from 'lucide-react';
+import EnvelopeIntro from './components/EnvelopeIntro';
+import { Heart, PhoneCall, Mail } from 'lucide-react';
 import { fireWeddingConfetti } from './utils/confetti';
 
 export default function App() {
   const [isRSVPOpen, setIsRSVPOpen] = useState(false);
   const [isQROpen, setIsQROpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
+  const [isEnvelopeOpen, setIsEnvelopeOpen] = useState(false);
 
   // Initialize guest wishes empty for clean manual testing
   const [rsvpList, setRsvpList] = useState(() => {
     try {
-      // Clear any previous mock/sample wishes
       localStorage.removeItem('akanksha_wishes');
       const saved = localStorage.getItem('akanksha_wishes_live');
       return saved ? JSON.parse(saved) : [];
@@ -31,16 +32,13 @@ export default function App() {
     } catch {}
   };
 
-  // Launch initial gentle confetti celebration on first mount
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fireWeddingConfetti();
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
     <div className="app-shell relative overflow-x-hidden">
+      {/* 3D Wax-Seal Envelope Intro Screen */}
+      {!isEnvelopeOpen && (
+        <EnvelopeIntro onOpen={() => setIsEnvelopeOpen(true)} />
+      )}
+
       {/* Subtle Floating Ambient Background Particles */}
       <div className="ambient-particles pointer-events-none">
         {[...Array(14)].map((_, i) => (
@@ -79,7 +77,7 @@ export default function App() {
         />
       </main>
 
-      {/* Bottom Footer with Contact Shortcut */}
+      {/* Bottom Footer with Contact & Re-seal Envelope Shortcuts */}
       <footer className="app-footer relative z-10 w-full text-center py-2 px-4 text-[11px] sm:text-xs text-pink-800/80">
         <div className="flex flex-wrap items-center justify-center gap-2 font-medium">
           <span className="flex items-center gap-1">
@@ -96,6 +94,15 @@ export default function App() {
           >
             <PhoneCall className="w-3 h-3 text-pink-600" />
             <span>Contact Hosts</span>
+          </button>
+          <span className="hidden sm:inline">•</span>
+          <button
+            onClick={() => setIsEnvelopeOpen(false)}
+            className="inline-flex items-center gap-1 text-pink-700 hover:text-pink-950 underline font-semibold"
+            title="Re-play Wax Seal Envelope Opening"
+          >
+            <Mail className="w-3 h-3 text-pink-600" />
+            <span>Re-seal Envelope</span>
           </button>
         </div>
       </footer>

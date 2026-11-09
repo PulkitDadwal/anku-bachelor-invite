@@ -151,3 +151,4 @@ export default function CoverHoloShimmer({ src, alt, className = '' }) {
     </div>
   );
 }
+

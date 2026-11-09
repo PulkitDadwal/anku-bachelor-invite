@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import LiveCountdown from './LiveCountdown';
 import CoverHoloShimmer from './CoverHoloShimmer';
+import InteractiveRibbon from './InteractiveRibbon';
 import { getGoogleCalendarUrl } from '../utils/calendar';
 import { fireWeddingConfetti, fireHearts } from '../utils/confetti';
 import { soundManager } from '../utils/audio';
@@ -140,10 +141,16 @@ export default function TurnCardBook({
   const renderSheet = (sheetPage) => (
     <>
       {sheetPage === 0 && (
-        <CoverHoloShimmer
-          src="/card-cover.jpg"
-          alt="Cheri Cheri Lady - Akanksha"
-        />
+        <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+          <CoverHoloShimmer
+            src="/card-cover.jpg"
+            alt="Cheri Cheri Lady - Akanksha"
+          />
+          <InteractiveRibbon
+            isTied={currentPage === 0 && !flip}
+            onUntie={nextPage}
+          />
+        </div>
       )}
 
       {sheetPage === 1 && (
@@ -412,11 +419,11 @@ export default function TurnCardBook({
               onClick={nextPage}
               className="w-full py-2.5 px-6 bg-gradient-to-r from-pink-500 via-rose-500 to-pink-500 text-white font-semibold rounded-2xl shadow-md shadow-pink-500/30 hover:scale-[1.02] active:scale-98 transition-all text-xs sm:text-sm flex items-center justify-center gap-2 border border-pink-200"
             >
-              <span>Open Invitation</span>
+              <span>Untie & Open Invitation</span>
               <ChevronRight className="w-4 h-4 animate-pulse" />
             </button>
             <span className="text-[10px] text-pink-700 font-medium">
-              Swipe left or click to turn page 🎀
+              Pull ribbon or tap button to open 🎀
             </span>
           </div>
         )}

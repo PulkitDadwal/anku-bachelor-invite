@@ -3,7 +3,7 @@ import TurnCardBook from './components/TurnCardBook';
 import RSVPModal from './components/RSVPModal';
 import QRModal from './components/QRModal';
 import ContactModal from './components/ContactModal';
-import { Heart, Sparkles, PhoneCall, Share2 } from 'lucide-react';
+import { Heart, PhoneCall } from 'lucide-react';
 import { fireWeddingConfetti } from './utils/confetti';
 
 export default function App() {
@@ -11,25 +11,13 @@ export default function App() {
   const [isQROpen, setIsQROpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
 
+  // Initialize guest wishes empty for clean manual testing
   const [rsvpList, setRsvpList] = useState(() => {
     try {
-      const saved = localStorage.getItem('akanksha_wishes');
-      return saved
-        ? JSON.parse(saved)
-        : [
-            {
-              id: 1,
-              name: 'Geetanjali & Family',
-              message: 'So excited for the most fabulous Cheri Cheri Bride! 💖✨',
-              date: 'Nov 9'
-            },
-            {
-              id: 2,
-              name: 'Palak',
-              message: 'Can’t wait to celebrate under the twilight! 🥂🎀',
-              date: 'Nov 9'
-            }
-          ];
+      // Clear any previous mock/sample wishes
+      localStorage.removeItem('akanksha_wishes');
+      const saved = localStorage.getItem('akanksha_wishes_live');
+      return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
     }
@@ -39,7 +27,7 @@ export default function App() {
     const updated = [newRsvp, ...rsvpList];
     setRsvpList(updated);
     try {
-      localStorage.setItem('akanksha_wishes', JSON.stringify(updated));
+      localStorage.setItem('akanksha_wishes_live', JSON.stringify(updated));
     } catch {}
   };
 
@@ -52,7 +40,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className="relative min-h-screen flex flex-col justify-between py-3 sm:py-5 overflow-x-hidden">
+    <div className="app-shell relative overflow-x-hidden">
       {/* Subtle Floating Ambient Background Particles */}
       <div className="ambient-particles pointer-events-none">
         {[...Array(14)].map((_, i) => (
@@ -72,22 +60,17 @@ export default function App() {
       </div>
 
       {/* Top Header */}
-      <header className="relative z-10 w-full text-center px-4 mb-1">
-        <div className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-white/85 backdrop-blur-md rounded-full border border-pink-200/90 shadow-xs text-pink-700 text-[11px] font-bold tracking-wider uppercase mb-1">
-          <Sparkles className="w-3.5 h-3.5 text-pink-500 animate-spin" />
-          <span>Interactive Invitation Card</span>
-          <Sparkles className="w-3.5 h-3.5 text-pink-500 animate-spin" />
-        </div>
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-pink-950 font-script tracking-wide">
+      <header className="app-header relative z-10 w-full text-center px-4 pt-2 pb-1">
+        <h1 className="font-serif font-bold text-pink-950 font-script tracking-wide leading-none text-[clamp(1.7rem,5.2vw,3.15rem)]">
           Akanksha's Twilight Toast
         </h1>
-        <p className="text-xs sm:text-sm text-pink-800/80 font-medium font-serif italic mt-0.5">
+        <p className="text-[11px] sm:text-sm text-pink-800/80 font-medium font-serif italic mt-1">
           Celebrating our ultimate Cheri Cheri Bride 🎀
         </p>
       </header>
 
       {/* Main 3D Turn Card Book Area */}
-      <main className="relative z-10 w-full flex-1 flex flex-col items-center justify-center">
+      <main className="app-main relative z-10">
         <TurnCardBook
           onOpenRSVP={() => setIsRSVPOpen(true)}
           onOpenQR={() => setIsQROpen(true)}
@@ -97,7 +80,7 @@ export default function App() {
       </main>
 
       {/* Bottom Footer with Contact Shortcut */}
-      <footer className="relative z-10 w-full text-center py-2.5 px-4 text-xs text-pink-800/80">
+      <footer className="app-footer relative z-10 w-full text-center py-2 px-4 text-[11px] sm:text-xs text-pink-800/80">
         <div className="flex flex-wrap items-center justify-center gap-2 font-medium">
           <span className="flex items-center gap-1">
             <span>Celebrating with</span>

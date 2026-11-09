@@ -32,7 +32,7 @@ export default function TurnCardBook({
   // 2: Inside Right (Countdown & QR)
   // 3: Back Cover (Blessing Wall & RSVP)
   const [currentPage, setCurrentPage] = useState(0);
-  const [isFlipping, setIsFlipping] = useState(false);
+  const [flip, setFlip] = useState(null);
   const [isMusicOn, setIsMusicOn] = useState(false);
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
@@ -65,7 +65,7 @@ export default function TurnCardBook({
 
   // Sound & confetti on opening
   const goToPage = (target) => {
-    if (isFlipping || target === currentPage || target < 0 || target > 3) return;
+    if (flip || target === currentPage || target < 0 || target > 3) return;
 
     // Ensure music is active
     if (!isMusicOn) {
@@ -73,8 +73,11 @@ export default function TurnCardBook({
     }
 
     soundManager.playPageTurn();
-    setIsFlipping(true);
-    setCurrentPage(target);
+    setFlip({
+      from: currentPage,
+      to: target,
+      dir: target > currentPage ? 'forward' : 'back'
+    });
 
     if (target === 1 || target === 2) {
       fireWeddingConfetti();
@@ -82,9 +85,10 @@ export default function TurnCardBook({
       fireHearts();
     }
 
-    setTimeout(() => {
-      setIsFlipping(false);
-    }, 450);
+    window.setTimeout(() => {
+      setCurrentPage(target);
+      setFlip(null);
+    }, 740);
   };
 
   const nextPage = () => {
@@ -106,7 +110,7 @@ export default function TurnCardBook({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentPage, isFlipping]);
+  }, [currentPage, flip]);
 
   // Touch Swipe Handlers for Mobile
   const onTouchStart = (e) => {
@@ -137,10 +141,173 @@ export default function TurnCardBook({
     });
   };
 
+  const renderSheet = (sheetPage) => (
+    <>
+      {sheetPage === 0 && (
+        <div className="relative w-full h-full bg-white flex items-center justify-center overflow-hidden">
+          <img
+            src="/card-cover.jpg"
+            alt="Cheri Cheri Lady - Akanksha"
+            className="w-full h-full object-contain object-center select-none"
+          />
+        </div>
+      )}
+
+      {sheetPage === 1 && (
+        <div className="relative w-full h-full bg-[#fdf5f7] flex items-center justify-center overflow-hidden">
+          <img
+            src="/card-invite.jpg"
+            alt="Akanksha's Twilight Toast Details"
+            className="w-full h-full object-contain object-center select-none"
+          />
+        </div>
+      )}
+
+      {sheetPage === 2 && (
+        <div className="relative w-full h-full bg-[#fffafb] flex flex-col items-center overflow-hidden">
+          <img
+            src="/ribbon-frame.jpg"
+            alt=""
+            className="absolute inset-0 w-full h-full object-contain object-center pointer-events-none select-none"
+          />
+
+          <div className="countdown-layout">
+            {/* Header under the top satin bow */}
+            <div className="w-full flex flex-col items-center shrink-0">
+              <div className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-white/92 backdrop-blur-md rounded-full text-pink-700 text-[9px] sm:text-[10px] font-bold tracking-widest uppercase border border-pink-200/80 shadow-2xs">
+                <Sparkles className="w-3 h-3 text-pink-500 shrink-0" />
+                <span>Cheri Cheri Countdown</span>
+              </div>
+              <h2 className="font-serif font-bold text-pink-950 font-script leading-tight text-[clamp(1.45rem,6.8cqw,2.25rem)] mt-0.5">
+                Akanksha's Twilight Toast
+              </h2>
+              <p className="text-[10px] sm:text-[11px] font-semibold text-pink-800/85 tracking-wide mt-0.5">
+                Saturday, Nov 21, 2026 • 7:00 PM IST
+              </p>
+            </div>
+
+            {/* Middle Section: Live Countdown Clock */}
+            <div className="w-full bg-white/92 backdrop-blur-md py-2 px-2.5 rounded-2xl shadow-sm border border-pink-200/90 max-w-full shrink-0">
+              <div className="text-[8px] sm:text-[9px] font-bold text-pink-600 uppercase tracking-widest text-center mb-1">
+                Time Remaining Until Celebration ⏳
+              </div>
+              <LiveCountdown compact={true} />
+            </div>
+
+            {/* Lower Section: QR Code Card (sits gracefully above bottom ribbon key) */}
+            <div
+              onClick={onOpenQR}
+              className="group cursor-pointer bg-white/95 backdrop-blur-md rounded-xl p-2 shadow-sm border border-pink-200/90 hover:border-pink-400 hover:shadow-md transition-all flex flex-col items-center shrink-0"
+            >
+              <img
+                src="/qr-code.png"
+                alt="Scan to open Akanksha's Twilight Toast"
+                className="countdown-qr object-contain rounded-md transition-transform group-hover:scale-105"
+              />
+              <div className="text-[8px] sm:text-[9px] font-bold text-pink-700 mt-1 flex items-center gap-1">
+                <QrCode className="w-3 h-3 text-pink-500" />
+                <span>Tap to Enlarge & Share</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {sheetPage === 3 && (
+        <div className="relative w-full h-full bg-[#fff7f4] flex flex-col items-center justify-between p-4 sm:p-5 text-center overflow-hidden">
+          <div
+            className="absolute inset-0 pointer-events-none opacity-50"
+            style={{
+              backgroundImage:
+                'repeating-linear-gradient(90deg, rgba(255, 214, 226, 0.55) 0px, rgba(255, 214, 226, 0.55) 11px, transparent 11px, transparent 24px)'
+            }}
+          />
+          <div className="relative w-full flex flex-col items-center pt-1 shrink-0">
+            <span className="text-2xl mb-0.5">🎀</span>
+            <h2 className="text-xl sm:text-3xl font-serif font-bold text-pink-950 font-script leading-tight">
+              With Love & Best Wishes
+            </h2>
+            <p className="text-[11px] text-pink-700/85 mt-0.5 max-w-xs leading-snug">
+              Celebrating our beautiful bride Akanksha as she begins her sweetest journey!
+            </p>
+          </div>
+
+          <div className="relative w-full flex-1 min-h-0 my-2 bg-white/92 rounded-2xl p-2.5 sm:p-3 border border-pink-200/90 shadow-inner overflow-y-auto text-left space-y-2">
+            <div className="text-[10px] font-bold text-pink-600 uppercase tracking-wider flex items-center justify-between sticky top-0 bg-white/95 pb-1 z-10">
+              <span>Guest Blessings ({rsvpList.length})</span>
+              <Sparkles className="w-3 h-3 text-pink-400" />
+            </div>
+
+            {rsvpList.length > 0 ? (
+              rsvpList.map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-pink-50/80 p-2 rounded-xl border border-pink-100/90 text-xs transition-all hover:bg-pink-50"
+                >
+                  <div className="flex items-center justify-between font-semibold text-pink-900">
+                    <span className="text-xs">{item.name}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[9px] text-pink-500">{item.date}</span>
+                      <button
+                        onClick={() => toggleWishLike(item.id)}
+                        className="text-pink-400 hover:text-rose-500 transition-colors"
+                        title="Like wish"
+                      >
+                        <Heart
+                          className={`w-3 h-3 ${
+                            likedWishes[item.id] ? 'text-rose-500 fill-rose-500' : ''
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                  {item.message && (
+                    <p className="text-[11px] text-pink-800/90 mt-0.5 italic">"{item.message}"</p>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="h-full min-h-[140px] flex flex-col items-center justify-center py-5 px-3 text-center">
+                <div className="w-11 h-11 rounded-full bg-pink-100 text-pink-500 flex items-center justify-center text-lg mb-2 shadow-inner">
+                  💌
+                </div>
+                <h4 className="text-xs sm:text-sm font-serif font-bold text-pink-950">
+                  Guestbook Ready for Wishes
+                </h4>
+                <p className="text-[10px] sm:text-[11px] text-pink-700/80 mt-1 max-w-[210px] leading-relaxed">
+                  Be the very first to shower our bride Akanksha with love & blessings!
+                </p>
+                <button
+                  onClick={onOpenRSVP}
+                  className="mt-2.5 px-3.5 py-1.5 bg-gradient-to-r from-pink-500 to-rose-400 text-white rounded-full text-[10px] sm:text-[11px] font-semibold shadow-xs hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5"
+                >
+                  <Heart className="w-3 h-3 fill-white" />
+                  <span>Write First Blessing 💖</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="relative w-full pt-1 text-center shrink-0">
+            <span className="text-[10px] text-pink-500 font-mono">
+              Cheri Cheri Lady • November 21, 2026
+            </span>
+          </div>
+        </div>
+      )}
+
+      <div className="absolute inset-y-0 left-0 w-3 bg-gradient-to-r from-black/18 to-transparent pointer-events-none z-20" />
+      <div className="absolute inset-y-0 right-0 w-2.5 bg-gradient-to-l from-black/10 to-transparent pointer-events-none z-20" />
+    </>
+  );
+
+  const underPage = flip ? (flip.dir === 'forward' ? flip.to : flip.from) : currentPage;
+  const leafPage = flip ? (flip.dir === 'forward' ? flip.from : flip.to) : null;
+
   return (
-    <div className="w-full flex flex-col items-center select-none">
+    <div className="book-layout select-none">
       {/* Top Utility Bar */}
-      <div className="w-full max-w-sm sm:max-w-md lg:max-w-[440px] flex items-center justify-between px-2 py-1.5 mb-2">
+      <div className="book-toolbar">
         <div className="flex items-center gap-2">
           <button
             onClick={toggleMusic}
@@ -184,180 +351,41 @@ export default function TurnCardBook({
         </div>
       </div>
 
-      {/* Main Card Viewport - Full Image Display with Zero Overflow */}
+      {/* Main Card Viewport */}
+      <div className="stage-slot">
       <div
-        className="relative w-full max-w-sm sm:max-w-md lg:max-w-[440px] aspect-[682/1024] max-h-[58vh] sm:max-h-[62vh] perspective-container px-2 sm:px-0"
+        className="invite-stage"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        {/* Book Container with realistic 3D depth and clean framing */}
-        <div
-          className={`relative w-full h-full rounded-2xl sm:rounded-3xl shadow-2xl transition-all duration-400 overflow-hidden border-2 border-pink-200/90 bg-white ${
-            isFlipping ? 'scale-[0.98]' : 'scale-100'
-          }`}
-          style={{
-            boxShadow:
-              '0 20px 40px -10px rgba(180, 83, 107, 0.3), 0 0 0 1px rgba(244, 114, 182, 0.2)'
-          }}
-        >
-          {/* ================= PAGE 0: FRONT COVER (Full Image, No Overlays) ================= */}
-          {currentPage === 0 && (
-            <div className="relative w-full h-full bg-white flex items-center justify-center animate-fadeIn overflow-hidden">
-              <img
-                src="/card-cover.jpg"
-                alt="Cheri Cheri Lady - Akanksha"
-                className="w-full h-full object-contain object-center select-none"
-              />
+        <div className="stack-sheet stack-b" />
+        <div className="stack-sheet stack-a" />
+
+        <div className="invite-book">
+          <div className="settled-page">
+            {renderSheet(underPage)}
+            {flip?.dir === 'forward' && <div className="reveal-shadow" />}
+          </div>
+
+          {flip && (
+            <div className={`page-leaf ${flip.dir}`} key={`${flip.from}-${flip.to}`}>
+              <div className="leaf-face leaf-front">
+                {renderSheet(leafPage)}
+                <div className="leaf-shade" />
+              </div>
+              <div className="leaf-face leaf-back" />
             </div>
           )}
 
-          {/* ================= PAGE 1: INVITATION DETAILS (Full Image, No Overlays) ================= */}
-          {currentPage === 1 && (
-            <div className="relative w-full h-full bg-[#fdf5f7] flex items-center justify-center animate-fadeIn overflow-hidden">
-              <img
-                src="/card-invite.jpg"
-                alt="Akanksha's Twilight Toast Details"
-                className="w-full h-full object-contain object-center select-none"
-              />
-            </div>
-          )}
-
-          {/* ================= PAGE 2: COUNTDOWN & QR CODE (Framed Cleanly) ================= */}
-          {currentPage === 2 && (
-            <div className="relative w-full h-full bg-[#fffafb] flex flex-col items-center justify-between animate-fadeIn overflow-hidden">
-              {/* Ribbon frame backdrop provided by user - Full Image Contained */}
-              <img
-                src="/ribbon-frame.jpg"
-                alt="Ribbon Frame"
-                className="absolute inset-0 w-full h-full object-contain object-center pointer-events-none select-none"
-              />
-
-              {/* Framed Content Container: Positioned inside the ribbon frame without overflow */}
-              <div className="relative z-10 w-full h-full flex flex-col items-center justify-between px-6 sm:px-9 pt-[16%] pb-[14%] text-center">
-                {/* Top Section: Header under the satin bow */}
-                <div className="w-full flex flex-col items-center">
-                  <div className="inline-flex items-center gap-1 px-3 py-0.5 bg-white/90 backdrop-blur-md rounded-full text-pink-700 text-[10px] font-bold tracking-widest uppercase mb-1 border border-pink-200/80 shadow-2xs">
-                    <Sparkles className="w-3 h-3 text-pink-500" />
-                    <span>Cheri Cheri Countdown</span>
-                  </div>
-
-                  <h2 className="text-lg sm:text-xl font-serif font-bold text-pink-950 font-script leading-tight">
-                    Akanksha's Twilight Toast
-                  </h2>
-                  <p className="text-[10px] font-medium text-pink-800/85">
-                    Saturday, Nov 21, 2026 • 7:00 PM IST
-                  </p>
-                </div>
-
-                {/* Middle Section: Live Countdown Clock */}
-                <div className="w-full flex flex-col items-center my-auto py-1">
-                  <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-2xl shadow-2xs border border-pink-200/90 mx-auto">
-                    <div className="text-[8px] sm:text-[9px] font-bold text-pink-600 uppercase tracking-widest text-center mb-1">
-                      Time Remaining Until Celebration
-                    </div>
-                    <LiveCountdown compact={true} />
-                  </div>
-                </div>
-
-                {/* QR Section: Crisp QR Code in Porcelain Card (above the ribbon key) */}
-                <div className="w-full flex flex-col items-center">
-                  <div
-                    onClick={onOpenQR}
-                    className="group cursor-pointer bg-white/95 rounded-xl p-2 shadow-sm border border-pink-200 hover:border-pink-400 transition-all flex flex-col items-center"
-                  >
-                    <img
-                      src="/qr-code.png"
-                      alt="Scan to open Akanksha's Twilight Toast"
-                      className="w-20 h-20 sm:w-24 sm:h-24 object-contain rounded-md transition-transform group-hover:scale-105"
-                    />
-                    <div className="text-[8px] sm:text-[9px] font-bold text-pink-700 mt-1 flex items-center gap-1">
-                      <QrCode className="w-3 h-3 text-pink-500" />
-                      <span>Tap to Enlarge & Share</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ================= PAGE 3: BLESSINGS & RSVP WALL ================= */}
-          {currentPage === 3 && (
-            <div className="relative w-full h-full bg-gradient-to-b from-pink-100/90 via-white to-pink-50/90 flex flex-col items-center justify-between p-4 sm:p-5 text-center animate-fadeIn overflow-hidden">
-              {/* Decorative top header */}
-              <div className="w-full flex flex-col items-center pt-1 shrink-0">
-                <span className="text-2xl mb-0.5">🎀</span>
-                <h2 className="text-2xl sm:text-3xl font-serif font-bold text-pink-950 font-script">
-                  With Love & Best Wishes
-                </h2>
-                <p className="text-[11px] text-pink-700/85 mt-0.5 max-w-xs">
-                  Celebrating our beautiful bride Akanksha as she begins her sweetest journey!
-                </p>
-              </div>
-
-              {/* Wishes Display Container */}
-              <div className="w-full flex-1 my-2 bg-white/90 rounded-2xl p-2.5 sm:p-3 border border-pink-200/90 shadow-inner overflow-y-auto text-left space-y-2">
-                <div className="text-[10px] font-bold text-pink-600 uppercase tracking-wider flex items-center justify-between sticky top-0 bg-white/95 pb-1">
-                  <span>Guest Blessings ({rsvpList.length})</span>
-                  <Sparkles className="w-3 h-3 text-pink-400" />
-                </div>
-
-                {rsvpList.length > 0 ? (
-                  rsvpList.map((item) => (
-                    <div
-                      key={item.id}
-                      className="bg-pink-50/80 p-2 rounded-xl border border-pink-100/90 text-xs transition-all hover:bg-pink-50"
-                    >
-                      <div className="flex items-center justify-between font-semibold text-pink-900">
-                        <span className="text-xs">{item.name}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[9px] text-pink-500">{item.date}</span>
-                          <button
-                            onClick={() => toggleWishLike(item.id)}
-                            className="text-pink-400 hover:text-rose-500 transition-colors"
-                            title="Like wish"
-                          >
-                            <Heart
-                              className={`w-3 h-3 ${
-                                likedWishes[item.id] ? 'text-rose-500 fill-rose-500' : ''
-                              }`}
-                            />
-                          </button>
-                        </div>
-                      </div>
-                      {item.message && (
-                        <p className="text-[11px] text-pink-800/90 mt-0.5 italic">
-                          "{item.message}"
-                        </p>
-                      )}
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-4 text-xs text-pink-400 italic">
-                    Be the first to leave a sweet wish for Akanksha! 🌸
-                  </div>
-                )}
-              </div>
-
-              <div className="w-full pt-1 text-center shrink-0">
-                <span className="text-[10px] text-pink-500 font-mono">
-                  Cheri Cheri Lady • November 21, 2026
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Book Spine Fold Shadows */}
-          <div className="absolute inset-y-0 left-0 w-2.5 bg-gradient-to-r from-black/15 to-transparent pointer-events-none z-20"></div>
-          <div className="absolute inset-y-0 right-0 w-2.5 bg-gradient-to-l from-black/10 to-transparent pointer-events-none z-20"></div>
+          {currentPage < 3 && !flip && <div className="page-curl" aria-hidden="true" />}
         </div>
 
-        {/* Floating Page Flip Navigation Chevrons (Desktop & Tablet) */}
         {currentPage > 0 && (
           <button
             onClick={prevPage}
-            disabled={isFlipping}
-            className="absolute -left-3 sm:-left-5 top-1/2 -translate-y-1/2 z-30 p-2 sm:p-2.5 bg-white/95 text-pink-700 hover:text-pink-900 rounded-full shadow-lg border border-pink-200 hover:scale-110 active:scale-95 transition-all"
+            disabled={!!flip}
+            className="absolute -left-2.5 sm:-left-5 top-1/2 -translate-y-1/2 z-40 p-1.5 sm:p-2 bg-white/95 text-pink-700 hover:text-pink-900 rounded-full shadow-lg border border-pink-200 hover:scale-110 active:scale-95 transition-all disabled:opacity-40"
             aria-label="Previous Page"
           >
             <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -367,17 +395,18 @@ export default function TurnCardBook({
         {currentPage < 3 && (
           <button
             onClick={nextPage}
-            disabled={isFlipping}
-            className="absolute -right-3 sm:-right-5 top-1/2 -translate-y-1/2 z-30 p-2 sm:p-2.5 bg-white/95 text-pink-700 hover:text-pink-900 rounded-full shadow-lg border border-pink-200 hover:scale-110 active:scale-95 transition-all"
+            disabled={!!flip}
+            className="absolute -right-2.5 sm:-right-5 top-1/2 -translate-y-1/2 z-40 p-1.5 sm:p-2 bg-white/95 text-pink-700 hover:text-pink-900 rounded-full shadow-lg border border-pink-200 hover:scale-110 active:scale-95 transition-all disabled:opacity-40"
             aria-label="Next Page"
           >
             <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         )}
       </div>
+      </div>
 
       {/* ================= INTERACTIVE BUTTONS RESTING BELOW THE IMAGE ================= */}
-      <div className="w-full max-w-sm sm:max-w-md lg:max-w-[440px] mt-2.5 sm:mt-3 px-2">
+      <div className="book-actions">
         {/* Page 0 Buttons */}
         {currentPage === 0 && (
           <div className="w-full flex flex-col items-center gap-1.5 animate-fadeIn">
@@ -544,7 +573,7 @@ export default function TurnCardBook({
       </div>
 
       {/* Bottom Page Thumbnails / Navigation Dots */}
-      <div className="flex items-center gap-2 mt-2.5 sm:mt-3">
+      <div className="book-dots">
         {[
           { label: 'Cover', icon: '🌸' },
           { label: 'Invite', icon: '💌' },
@@ -554,7 +583,8 @@ export default function TurnCardBook({
           <button
             key={idx}
             onClick={() => goToPage(idx)}
-            className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+            aria-label={tab.label}
+            className={`flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-semibold transition-all ${
               currentPage === idx
                 ? 'bg-pink-500 text-white shadow-xs shadow-pink-500/30 scale-105 border border-pink-400'
                 : 'bg-white/85 text-pink-700 hover:bg-pink-100/90 border border-pink-200/70'

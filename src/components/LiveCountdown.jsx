@@ -46,14 +46,14 @@ export default function LiveCountdown({ className = '', compact = false }) {
   ];
 
   return (
-    <div className={`flex items-center justify-center gap-1.5 sm:gap-2.5 ${className}`}>
+    <div className={`flex items-center justify-center gap-1 sm:gap-2 ${className}`}>
       {units.map((unit, idx) => (
         <React.Fragment key={unit.label}>
           <div className="flex flex-col items-center">
             <div
-              className={`flex items-center justify-center font-bold font-mono tracking-tight text-pink-900 bg-white/95 rounded-xl border border-pink-200/90 shadow-sm transition-all ${
+              className={`flex items-center justify-center font-bold font-mono tracking-tight text-pink-900 bg-white/95 rounded-lg border border-pink-200/90 shadow-2xs transition-all ${
                 compact
-                  ? 'w-10 h-9 sm:w-11 sm:h-10 text-base sm:text-lg'
+                  ? 'w-[clamp(1.9rem,6.4cqw,2.7rem)] h-[clamp(1.7rem,5.6cqw,2.3rem)] text-[clamp(0.85rem,2.8cqw,1.1rem)]'
                   : 'w-12 h-11 sm:w-14 sm:h-12 text-lg sm:text-xl'
               } ${unit.pulse ? 'ring-2 ring-pink-300/40' : ''}`}
             >
@@ -61,13 +61,13 @@ export default function LiveCountdown({ className = '', compact = false }) {
                 {unit.value}
               </span>
             </div>
-            <span className="text-[9px] sm:text-[10px] font-bold tracking-wider text-pink-700/80 mt-1 uppercase">
+            <span className="text-[8px] sm:text-[9px] font-bold tracking-wider text-pink-700/80 mt-0.5 uppercase">
               {unit.label}
             </span>
           </div>
 
           {idx < units.length - 1 && (
-            <span className="text-pink-400 font-bold text-sm sm:text-base pb-4 select-none">
+            <span className="text-pink-400 font-bold text-xs sm:text-sm select-none self-center mb-2.5">
               :
             </span>
           )}

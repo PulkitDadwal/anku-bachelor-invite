@@ -39,6 +39,7 @@ export default function TurnCardBook({
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const [likedWishes, setLikedWishes] = useState({});
+  const [hasUntiedRibbon, setHasUntiedRibbon] = useState(false);
 
   const minSwipeDistance = 45;
 
@@ -69,6 +70,10 @@ export default function TurnCardBook({
   const goToPage = (target) => {
     if (flip || target === currentPage || target < 0 || target > 3) return;
 
+    if (currentPage === 0 && target > 0) {
+      setHasUntiedRibbon(true);
+    }
+
     soundManager.playPageTurn();
     setFlip({
       from: currentPage,
@@ -86,6 +91,11 @@ export default function TurnCardBook({
       setCurrentPage(target);
       setFlip(null);
     }, 740);
+  };
+
+  const handleRibbonUntie = () => {
+    setHasUntiedRibbon(true);
+    nextPage();
   };
 
   const nextPage = () => {
@@ -146,10 +156,12 @@ export default function TurnCardBook({
             src="/card-cover.jpg"
             alt="Cheri Cheri Lady - Akanksha"
           />
-          <InteractiveRibbon
-            isTied={currentPage === 0 && !flip}
-            onUntie={nextPage}
-          />
+          {!hasUntiedRibbon && (
+            <InteractiveRibbon
+              isTied={!hasUntiedRibbon}
+              onUntie={handleRibbonUntie}
+            />
+          )}
         </div>
       )}
 
@@ -419,11 +431,13 @@ export default function TurnCardBook({
               onClick={nextPage}
               className="w-full py-2.5 px-6 bg-gradient-to-r from-pink-500 via-rose-500 to-pink-500 text-white font-semibold rounded-2xl shadow-md shadow-pink-500/30 hover:scale-[1.02] active:scale-98 transition-all text-xs sm:text-sm flex items-center justify-center gap-2 border border-pink-200"
             >
-              <span>Untie & Open Invitation</span>
+              <span>{hasUntiedRibbon ? 'Open Invitation' : 'Untie & Open Invitation'}</span>
               <ChevronRight className="w-4 h-4 animate-pulse" />
             </button>
             <span className="text-[10px] text-pink-700 font-medium">
-              Pull ribbon or tap button to open 🎀
+              {hasUntiedRibbon
+                ? 'Swipe left or click to turn page 🎀'
+                : 'Pull ribbon or tap button to open 🎀'}
             </span>
           </div>
         )}

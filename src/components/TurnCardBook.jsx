@@ -41,6 +41,21 @@ export default function TurnCardBook({
 
   const minSwipeDistance = 45;
 
+  // Auto-play background music on mount and subscribe to audio state
+  useEffect(() => {
+    const unsubscribe = soundManager.subscribe((playing) => {
+      setIsMusicOn(playing);
+    });
+
+    soundManager.setupAutoplay((playing) => {
+      setIsMusicOn(playing);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
   const toggleWishLike = (id) => {
     setLikedWishes((prev) => ({
       ...prev,
@@ -52,6 +67,11 @@ export default function TurnCardBook({
   // Sound & confetti on opening
   const goToPage = (target) => {
     if (isFlipping || target === currentPage || target < 0 || target > 3) return;
+
+    // Ensure music is active
+    if (!isMusicOn) {
+      soundManager.startBGM();
+    }
 
     soundManager.playPageTurn();
     setIsFlipping(true);
@@ -130,10 +150,10 @@ export default function TurnCardBook({
                 ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white border-pink-400 shadow-pink-500/30 animate-pulse'
                 : 'bg-white/90 text-pink-700 border-pink-200/80 hover:bg-pink-50'
             }`}
-            title={isMusicOn ? 'Mute Music' : 'Play Celebration Melody'}
+            title={isMusicOn ? 'Pause Music' : 'Play Thodi Si Daaru - AP Dhillon'}
           >
             {isMusicOn ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
-            <span>{isMusicOn ? 'Music Playing 🎶' : 'Play Music 🎵'}</span>
+            <span>{isMusicOn ? 'Music On 🎶' : 'Play Music 🎵'}</span>
           </button>
 
           <button

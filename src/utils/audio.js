@@ -1,13 +1,63 @@
-// Web Audio API Synthesizer - Realistic Paper Flip & Ambient Music Box
+// Audio Manager - Plays background MP3 track with autoplay + paper flip & chime effects
 
 class SoundEffects {
   constructor() {
     this.ctx = null;
+    this.bgm = null;
     this.bgmPlaying = false;
-    this.bgmTimer = null;
+    this.subscribers = new Set();
+    this.autoplayRegistered = false;
+
+    // Initialize HTML5 Audio element for background music
+    if (typeof window !== 'undefined') {
+      this.initBGM();
+    }
   }
 
-  init() {
+  initBGM() {
+    if (this.bgm) return;
+    try {
+      // Use the MP3 file provided in public directory
+      this.bgm = new Audio('/bgm.mp3');
+      this.bgm.loop = true;
+      this.bgm.volume = 0.65;
+      this.bgm.preload = 'auto';
+
+      this.bgm.addEventListener('play', () => {
+        this.bgmPlaying = true;
+        this.notifySubscribers(true);
+      });
+
+      this.bgm.addEventListener('pause', () => {
+        this.bgmPlaying = false;
+        this.notifySubscribers(false);
+      });
+
+      this.bgm.addEventListener('ended', () => {
+        this.bgmPlaying = false;
+        this.notifySubscribers(false);
+      });
+    } catch (e) {
+      console.warn('Audio init warning:', e);
+    }
+  }
+
+  notifySubscribers(isPlaying) {
+    this.subscribers.forEach((cb) => {
+      try {
+        cb(isPlaying);
+      } catch {}
+    });
+  }
+
+  subscribe(callback) {
+    this.subscribers.add(callback);
+    callback(this.bgmPlaying);
+    return () => this.subscribers.delete(callback);
+  }
+
+  // Web Audio Context for sound effects
+  initAudioContext() {
     if (!this.ctx) {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (AudioCtx) {
@@ -22,11 +72,10 @@ class SoundEffects {
   // Realistic paper turn / rustle sound
   playPageTurn() {
     try {
-      this.init();
+      this.initAudioContext();
       if (!this.ctx) return;
 
       const now = this.ctx.currentTime;
-      // White noise buffer for paper texture
       const bufferSize = this.ctx.sampleRate * 0.22;
       const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
       const output = buffer.getChannelData(0);
@@ -37,7 +86,6 @@ class SoundEffects {
       const whiteNoise = this.ctx.createBufferSource();
       whiteNoise.buffer = buffer;
 
-      // Filter to simulate soft paper whoosh
       const filter = this.ctx.createBiquadFilter();
       filter.type = 'bandpass';
       filter.frequency.setValueAtTime(900, now);
@@ -46,7 +94,7 @@ class SoundEffects {
 
       const gain = this.ctx.createGain();
       gain.gain.setValueAtTime(0.01, now);
-      gain.gain.linearRampToValueAtTime(0.25, now + 0.05);
+      gain.gain.linearRampToValueAtTime(0.2, now + 0.05);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
 
       whiteNoise.connect(filter);
@@ -55,15 +103,13 @@ class SoundEffects {
 
       whiteNoise.start(now);
       whiteNoise.stop(now + 0.22);
-    } catch {
-      // Audio autoplay policy fallback
-    }
+    } catch {}
   }
 
-  // Soft celebratory sparkle chime
+  // Soft celebratory chime
   playChime() {
     try {
-      this.init();
+      this.initAudioContext();
       if (!this.ctx) return;
 
       const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
@@ -76,97 +122,98 @@ class SoundEffects {
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(freq, now + idx * 0.07);
 
-        gain.gain.setValueAtTime(0.12, now + idx * 0.07);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.07 + 0.6);
+        gain.gain.setValueAtTime(0.1, now + idx * 0.07);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.07 + 0.55);
 
         osc.connect(gain);
         gain.connect(this.ctx.destination);
 
         osc.start(now + idx * 0.07);
-        osc.stop(now + idx * 0.07 + 0.65);
+        osc.stop(now + idx * 0.07 + 0.6);
       });
     } catch {}
   }
 
-  // Soft romantic music box melody loop
-  toggleBGM(onStateChange) {
-    this.init();
-    if (!this.ctx) return false;
+  // Play background music track
+  startBGM() {
+    this.initBGM();
+    if (!this.bgm) return Promise.resolve(false);
 
+    const playPromise = this.bgm.play();
+    if (playPromise !== undefined) {
+      return playPromise
+        .then(() => {
+          this.bgmPlaying = true;
+          this.notifySubscribers(true);
+          return true;
+        })
+        .catch(() => {
+          this.bgmPlaying = false;
+          this.notifySubscribers(false);
+          return false;
+        });
+    }
+    return Promise.resolve(false);
+  }
+
+  // Pause background music
+  stopBGM() {
+    if (this.bgm) {
+      this.bgm.pause();
+      this.bgmPlaying = false;
+      this.notifySubscribers(false);
+    }
+  }
+
+  // Toggle background music
+  toggleBGM(onStateChange) {
     if (this.bgmPlaying) {
       this.stopBGM();
       if (onStateChange) onStateChange(false);
       return false;
     } else {
-      this.startBGM();
-      if (onStateChange) onStateChange(true);
+      this.startBGM().then((playing) => {
+        if (onStateChange) onStateChange(playing);
+      });
       return true;
     }
   }
 
-  startBGM() {
-    this.bgmPlaying = true;
-    // Sweet, romantic melody line (Cheri Cheri / celebration feel)
-    const melody = [
-      { note: 392.00, dur: 0.4 }, // G4
-      { note: 440.00, dur: 0.4 }, // A4
-      { note: 523.25, dur: 0.6 }, // C5
-      { note: 587.33, dur: 0.4 }, // D5
-      { note: 659.25, dur: 0.8 }, // E5
-      { note: 587.33, dur: 0.4 }, // D5
-      { note: 523.25, dur: 0.8 }, // C5
-      { note: 440.00, dur: 0.4 }, // A4
-      { note: 392.00, dur: 0.8 }, // G4
-      { note: 523.25, dur: 0.8 }, // C5
-      { note: 659.25, dur: 0.8 }, // E5
-      { note: 783.99, dur: 1.2 }, // G5
-    ];
+  // Setup automatic playback: attempts immediate autoplay and falls back to first interaction
+  setupAutoplay(onPlayCallback) {
+    this.initBGM();
 
-    let noteIndex = 0;
-    const playNextNote = () => {
-      if (!this.bgmPlaying || !this.ctx) return;
+    // 1. Try immediate autoplay
+    this.startBGM().then((started) => {
+      if (started) {
+        if (onPlayCallback) onPlayCallback(true);
+      } else {
+        // 2. If blocked by browser autoplay policy, attach one-time listener to user interaction
+        if (this.autoplayRegistered) return;
+        this.autoplayRegistered = true;
 
-      const item = melody[noteIndex % melody.length];
-      const now = this.ctx.currentTime;
+        const unlockAudio = () => {
+          if (!this.bgmPlaying) {
+            this.startBGM().then((success) => {
+              if (success && onPlayCallback) {
+                onPlayCallback(true);
+              }
+            });
+          }
+          // Remove interaction listeners once triggered
+          window.removeEventListener('click', unlockAudio, true);
+          window.removeEventListener('touchstart', unlockAudio, true);
+          window.removeEventListener('keydown', unlockAudio, true);
+          window.removeEventListener('scroll', unlockAudio, true);
+        };
 
-      // Celesta / Music Box chime oscillator
-      const osc = this.ctx.createOscillator();
-      const oscHarmonic = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(item.note, now);
-
-      oscHarmonic.type = 'triangle';
-      oscHarmonic.frequency.setValueAtTime(item.note * 2, now);
-
-      gain.gain.setValueAtTime(0.08, now);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + item.dur * 1.5);
-
-      osc.connect(gain);
-      oscHarmonic.connect(gain);
-      gain.connect(this.ctx.destination);
-
-      osc.start(now);
-      oscHarmonic.start(now);
-      osc.stop(now + item.dur * 1.5);
-      oscHarmonic.stop(now + item.dur * 1.5);
-
-      noteIndex++;
-      this.bgmTimer = setTimeout(playNextNote, item.dur * 850);
-    };
-
-    playNextNote();
-  }
-
-  stopBGM() {
-    this.bgmPlaying = false;
-    if (this.bgmTimer) {
-      clearTimeout(this.bgmTimer);
-      this.bgmTimer = null;
-    }
+        window.addEventListener('click', unlockAudio, true);
+        window.addEventListener('touchstart', unlockAudio, true);
+        window.addEventListener('keydown', unlockAudio, true);
+        window.addEventListener('scroll', unlockAudio, true);
+      }
+    });
   }
 }
 
 export const soundManager = new SoundEffects();
-

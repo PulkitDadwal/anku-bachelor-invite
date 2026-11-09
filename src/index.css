@@ -196,14 +196,14 @@ body::before {
   align-items: center;
   justify-content: space-evenly;
   text-align: center;
-  padding-top: 15%;
-  padding-bottom: 15%;
+  padding-top: 14%;
+  padding-bottom: 13%;
   box-sizing: border-box;
 }
 
 .countdown-qr {
-  width: clamp(60px, 21cqw, 88px);
-  height: clamp(60px, 21cqw, 88px);
+  width: clamp(54px, 18cqw, 78px);
+  height: clamp(54px, 18cqw, 78px);
 }
 
 .invite-book {

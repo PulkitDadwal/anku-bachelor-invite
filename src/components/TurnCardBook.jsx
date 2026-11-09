@@ -67,11 +67,6 @@ export default function TurnCardBook({
   const goToPage = (target) => {
     if (flip || target === currentPage || target < 0 || target > 3) return;
 
-    // Ensure music is active
-    if (!isMusicOn) {
-      soundManager.startBGM();
-    }
-
     soundManager.playPageTurn();
     setFlip({
       from: currentPage,
@@ -187,12 +182,17 @@ export default function TurnCardBook({
             </div>
 
             {/* Middle Section: Live Countdown Clock */}
-            <div className="w-full bg-white/92 backdrop-blur-md py-2 px-2.5 rounded-2xl shadow-sm border border-pink-200/90 max-w-full shrink-0">
+            <div className="w-full bg-white/92 backdrop-blur-md py-1.5 px-2.5 rounded-2xl shadow-sm border border-pink-200/90 max-w-full shrink-0">
               <div className="text-[8px] sm:text-[9px] font-bold text-pink-600 uppercase tracking-widest text-center mb-1">
                 Time Remaining Until Celebration ⏳
               </div>
               <LiveCountdown compact={true} />
             </div>
+
+            {/* Poetic calligraphy link */}
+            <p className="font-script text-pink-900 leading-none text-[clamp(1.2rem,5.2cqw,1.75rem)] tracking-wide px-1 shrink-0">
+              Let the map lead you ✨
+            </p>
 
             {/* Lower Section: QR Code Card (sits gracefully above bottom ribbon key) */}
             <div

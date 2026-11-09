@@ -5,6 +5,7 @@ class SoundEffects {
     this.ctx = null;
     this.bgm = null;
     this.bgmPlaying = false;
+    this.userMuted = false; // Tracks if the user intentionally turned off the music
     this.subscribers = new Set();
     this.autoplayRegistered = false;
 
@@ -17,7 +18,6 @@ class SoundEffects {
   initBGM() {
     if (this.bgm) return;
     try {
-      // Use the MP3 file provided in public directory
       this.bgm = new Audio('/bgm.mp3');
       this.bgm.loop = true;
       this.bgm.volume = 0.65;
@@ -134,8 +134,12 @@ class SoundEffects {
     } catch {}
   }
 
-  // Play background music track
-  startBGM() {
+  // Play background music track (respects userMuted unless force = true)
+  startBGM(force = false) {
+    if (this.userMuted && !force) {
+      return Promise.resolve(false);
+    }
+
     this.initBGM();
     if (!this.bgm) return Promise.resolve(false);
 
@@ -157,7 +161,10 @@ class SoundEffects {
   }
 
   // Pause background music
-  stopBGM() {
+  stopBGM(userInitiated = false) {
+    if (userInitiated) {
+      this.userMuted = true;
+    }
     if (this.bgm) {
       this.bgm.pause();
       this.bgmPlaying = false;
@@ -168,39 +175,44 @@ class SoundEffects {
   // Toggle background music
   toggleBGM(onStateChange) {
     if (this.bgmPlaying) {
-      this.stopBGM();
+      // User explicitly turned off the music
+      this.stopBGM(true);
       if (onStateChange) onStateChange(false);
       return false;
     } else {
-      this.startBGM().then((playing) => {
+      // User explicitly turned on the music
+      this.userMuted = false;
+      this.startBGM(true).then((playing) => {
         if (onStateChange) onStateChange(playing);
       });
       return true;
     }
   }
 
-  // Setup automatic playback: attempts immediate autoplay and falls back to first interaction
+  // Setup automatic playback on initial site open
   setupAutoplay(onPlayCallback) {
     this.initBGM();
 
+    // Do not autoplay if user has already explicitly muted
+    if (this.userMuted) return;
+
     // 1. Try immediate autoplay
-    this.startBGM().then((started) => {
+    this.startBGM(false).then((started) => {
       if (started) {
         if (onPlayCallback) onPlayCallback(true);
       } else {
-        // 2. If blocked by browser autoplay policy, attach one-time listener to user interaction
+        // 2. Fall back to first user interaction
         if (this.autoplayRegistered) return;
         this.autoplayRegistered = true;
 
         const unlockAudio = () => {
-          if (!this.bgmPlaying) {
-            this.startBGM().then((success) => {
+          if (!this.userMuted && !this.bgmPlaying) {
+            this.startBGM(false).then((success) => {
               if (success && onPlayCallback) {
                 onPlayCallback(true);
               }
             });
           }
-          // Remove interaction listeners once triggered
           window.removeEventListener('click', unlockAudio, true);
           window.removeEventListener('touchstart', unlockAudio, true);
           window.removeEventListener('keydown', unlockAudio, true);
